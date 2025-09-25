@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Fish Mart</string>
+    <string name="app_description">Fresh Fish &amp; Seafood Delivery</string>
+    
+    <!-- Notification strings -->
+    <string name="notification_channel_name">Fish Mart Notifications</string>
+    <string name="notification_channel_description">Notifications for orders, delivery updates, and promotions</string>
+    
+    <!-- Permission strings -->
+    <string name="camera_permission_title">Camera Permission</string>
+    <string name="camera_permission_message">This app needs camera access to take photos for your profile</string>
+    <string name="location_permission_title">Location Permission</string>
+    <string name="location_permission_message">This app needs location access to provide better delivery experience</string>
+    
+    <!-- Error messages -->
+    <string name="network_error">Network connection error. Please check your internet connection.</string>
+    <string name="generic_error">Something went wrong. Please try again.</string>
+</resources> 

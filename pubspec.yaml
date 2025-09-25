@@ -1,0 +1,76 @@
+name: fish_mart
+description: A Flutter app for fresh fish and seafood delivery
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_bloc: ^8.1.3
+  equatable: ^2.0.5
+
+  # Navigation
+  go_router: ^12.1.3
+
+  # Firebase - temporarily commented out to fix iOS build issues
+  # firebase_core: ^2.24.2
+  # firebase_auth: ^4.15.3
+
+  # UI Components
+  cupertino_icons: ^1.0.6
+  cached_network_image: ^3.3.0
+  shimmer: ^3.0.0
+  # carousel_slider: ^4.2.1  # Temporarily disabled due to naming conflict
+
+  # Network
+  dio: ^5.3.2
+  connectivity_plus: ^5.0.2
+
+  # Local Storage
+  shared_preferences: ^2.2.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Utils
+  intl: ^0.18.1
+  logger: ^2.0.2+1
+  permission_handler: ^11.1.0
+  get_it: ^7.6.4
+  dartz: ^0.10.1
+
+  # Image Handling
+  image_picker: ^1.0.4
+
+  # Animations
+  lottie: ^2.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.7
+  hive_generator: ^2.0.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/animations/
+
+  # fonts:
+  #   - family: Poppins
+  #     fonts:
+  #       - asset: assets/fonts/Poppins-Regular.ttf
+  #       - asset: assets/fonts/Poppins-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Poppins-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Poppins-Bold.ttf
+  #         weight: 700
