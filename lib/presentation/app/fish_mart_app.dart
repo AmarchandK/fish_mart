@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/config/app_config.dart';
 import '../../core/theme/app_theme.dart';
@@ -7,7 +8,7 @@ import '../../core/di/injection_container.dart' as di;
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/product/product_bloc.dart';
 import '../blocs/category/category_bloc.dart';
-import '../pages/splash/splash_page.dart';
+import '../blocs/home/home_bloc.dart';
 
 class FishMartApp extends StatelessWidget {
   const FishMartApp({super.key});
@@ -25,14 +26,17 @@ class FishMartApp extends StatelessWidget {
         BlocProvider<CategoryBloc>(
           create: (context) => di.sl<CategoryBloc>(),
         ),
+        BlocProvider<HomeBloc>(
+          create: (context) => di.sl<HomeBloc>(),
+        ),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         title: AppConfig.appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
-        home: const SplashPage(),
+        routerConfig: di.sl<GoRouter>(),
       ),
     );
   }

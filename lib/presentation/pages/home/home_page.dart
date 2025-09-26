@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-// import 'package:carousel_slider/carousel_slider.dart' hide CarouselController;
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../../core/router/app_router.dart';
 import '../../widgets/category_card.dart';
 import '../../widgets/product_card.dart';
+import '../../blocs/home/home_bloc.dart';
+import '../../blocs/auth/auth_bloc.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,89 +17,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<String> _bannerImages = [
-    'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
-    'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800',
-    'https://images.unsplash.com/photo-1563379091339-03246963d30a?w=800',
-  ];
-
-  final List<Map<String, dynamic>> _categories = [
-    {
-      'id': '1',
-      'name': 'Sea Fish',
-      'icon': Icons.waves,
-      'color': const Color(0xFF0077BE),
-      'image':
-          'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=300',
-    },
-    {
-      'id': '2',
-      'name': 'Boat Fish',
-      'icon': Icons.sailing,
-      'color': const Color(0xFF00A86B),
-      'image':
-          'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=300',
-    },
-    {
-      'id': '3',
-      'name': 'Vanchi Fish',
-      'icon': Icons.anchor,
-      'color': const Color(0xFFFF6B35),
-      'image':
-          'https://images.unsplash.com/photo-1563379091339-03246963d30a?w=300',
-    },
-    {
-      'id': '4',
-      'name': 'Meat Products',
-      'icon': Icons.restaurant,
-      'color': const Color(0xFFE53E3E),
-      'image':
-          'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=300',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _featuredProducts = [
-    {
-      'id': '1',
-      'name': 'Fresh Salmon',
-      'price': 299.99,
-      'originalPrice': 399.99,
-      'image':
-          'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=300',
-      'rating': 4.5,
-      'isAvailable': true,
-    },
-    {
-      'id': '2',
-      'name': 'King Fish',
-      'price': 249.99,
-      'originalPrice': null,
-      'image':
-          'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=300',
-      'rating': 4.8,
-      'isAvailable': true,
-    },
-    {
-      'id': '3',
-      'name': 'Fresh Prawns',
-      'price': 399.99,
-      'originalPrice': 499.99,
-      'image':
-          'https://images.unsplash.com/photo-1563379091339-03246963d30a?w=300',
-      'rating': 4.6,
-      'isAvailable': false,
-    },
-    {
-      'id': '4',
-      'name': 'Tuna Steaks',
-      'price': 199.99,
-      'originalPrice': null,
-      'image':
-          'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=300',
-      'rating': 4.3,
-      'isAvailable': true,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Load home data when the page initializes
+    context.read<HomeBloc>().add(const HomeLoadRequested());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,10 +38,10 @@ class _HomePageState extends State<HomePage> {
             Text(
               'Fresh Fish & Seafood Delivery',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-              ),
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                  ),
             ),
           ],
         ),
@@ -127,39 +54,118 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              context.read<AuthBloc>().add(const AuthLogoutRequested());
+            },
+          ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Hero Carousel
-            _buildHeroCarousel(),
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<HomeBloc, HomeState>(
+            listener: (context, state) {
+              if (state is HomeError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: ${state.message}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+          ),
+          BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) {
+              if (state is AuthUnauthenticated) {
+                context.go(AppRouter.login);
+              }
+            },
+          ),
+        ],
+        child: BlocBuilder<HomeBloc, HomeState>(
+          builder: (context, state) {
+            if (state is HomeLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (state is HomeLoaded) {
+              return RefreshIndicator(
+                onRefresh: () async {
+                  context.read<HomeBloc>().add(const HomeRefreshRequested());
+                },
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Hero Carousel
+                      _buildHeroCarousel(state.bannerImages),
 
-            const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-            // Categories Section
-            _buildCategoriesSection(),
+                      // Categories Section
+                      _buildCategoriesSection(state.categories),
 
-            const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-            // Featured Products Section
-            _buildFeaturedProductsSection(),
+                      // Featured Products Section
+                      _buildFeaturedProductsSection(state.featuredProducts),
 
-            const SizedBox(height: 24),
-          ],
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              );
+            } else if (state is HomeError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Failed to load data',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      state.message,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<HomeBloc>().add(const HomeLoadRequested());
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return const Center(
+              child: Text('Welcome to Fish Mart!'),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildHeroCarousel() {
+  Widget _buildHeroCarousel(List<String> bannerImages) {
     return SizedBox(
       height: 200,
       child: PageView.builder(
-        itemCount: _bannerImages.length,
+        itemCount: bannerImages.length,
         itemBuilder: (context, index) {
-          final imageUrl = _bannerImages[index];
+          final imageUrl = bannerImages[index];
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 8.0),
             decoration: BoxDecoration(
@@ -202,7 +208,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCategoriesSection() {
+  Widget _buildCategoriesSection(List<dynamic> categories) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -214,12 +220,12 @@ class _HomePageState extends State<HomePage> {
               Text(
                 'Categories',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               TextButton(
                 onPressed: () {
-                  // Navigate to categories page
+                  context.go(AppRouter.categories);
                 },
                 child: const Text('View All'),
               ),
@@ -232,18 +238,18 @@ class _HomePageState extends State<HomePage> {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _categories.length,
+            itemCount: categories.length,
             itemBuilder: (context, index) {
-              final category = _categories[index];
+              final category = categories[index];
               return Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: CategoryCard(
-                  name: category['name'] as String,
-                  icon: category['icon'] as IconData,
-                  color: category['color'] as Color,
+                  name: category.name as String,
+                  icon: category.icon as IconData,
+                  color: category.color as Color,
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${category['name']} selected')),
+                      SnackBar(content: Text('${category.name} selected')),
                     );
                   },
                 ),
@@ -255,7 +261,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFeaturedProductsSection() {
+  Widget _buildFeaturedProductsSection(List<dynamic> featuredProducts) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -267,12 +273,16 @@ class _HomePageState extends State<HomePage> {
               Text(
                 'Featured Products',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               TextButton(
                 onPressed: () {
-                  // Navigate to products page
+                  // Navigate to products page - you can implement this later
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Products page - Coming Soon')),
+                  );
                 },
                 child: const Text('View All'),
               ),
@@ -285,21 +295,21 @@ class _HomePageState extends State<HomePage> {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _featuredProducts.length,
+            itemCount: featuredProducts.length,
             itemBuilder: (context, index) {
-              final product = _featuredProducts[index];
+              final product = featuredProducts[index];
               return Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: ProductCard(
-                  name: product['name'] as String,
-                  price: (product['price'] as num).toDouble(),
-                  originalPrice: product['originalPrice'] as double?,
-                  imageUrl: product['image'] as String,
-                  rating: (product['rating'] as num).toDouble(),
-                  isAvailable: product['isAvailable'] as bool,
+                  name: product.name as String,
+                  price: product.price as double,
+                  originalPrice: product.originalPrice as double?,
+                  imageUrl: product.primaryImage as String,
+                  rating: product.rating as double,
+                  isAvailable: product.isAvailable as bool,
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${product['name']} selected')),
+                      SnackBar(content: Text('${product.name} selected')),
                     );
                   },
                 ),
