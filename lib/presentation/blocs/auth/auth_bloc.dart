@@ -28,17 +28,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
 
-    final result = await loginWithPhone(
-      LoginWithPhoneParams(phoneNumber: event.phoneNumber),
-    );
+    try {
+      final sessionId = await loginWithPhone(
+        LoginWithPhoneParams(phoneNumber: event.phoneNumber),
+      );
 
-    result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
-      (sessionId) => emit(AuthOtpSent(
+      emit(AuthOtpSent(
         sessionId: sessionId,
         phoneNumber: event.phoneNumber,
-      )),
-    );
+      ));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
   }
 
   Future<void> _onVerifyOtpRequested(
@@ -47,17 +48,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
 
-    final result = await verifyOtp(
-      VerifyOtpParams(
-        phoneNumber: event.phoneNumber,
-        otp: event.otp,
-      ),
-    );
+    try {
+      final user = await verifyOtp(
+        VerifyOtpParams(
+          phoneNumber: event.phoneNumber,
+          otp: event.otp,
+        ),
+      );
 
-    result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
-      (user) => emit(AuthAuthenticated(user: user)),
-    );
+      emit(AuthAuthenticated(user: user));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
   }
 
   Future<void> _onLogoutRequested(

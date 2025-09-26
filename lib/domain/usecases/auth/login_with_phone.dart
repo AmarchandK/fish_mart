@@ -1,7 +1,5 @@
-import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 
-import '../../../core/error/failures.dart';
 import '../../../core/usecase/usecase.dart';
 import '../../repositories/auth_repository.dart';
 
@@ -11,7 +9,7 @@ class LoginWithPhone implements UseCase<String, LoginWithPhoneParams> {
   LoginWithPhone(this.repository);
 
   @override
-  Future<Either<Failure, String>> call(LoginWithPhoneParams params) async {
+  Future<String> call(LoginWithPhoneParams params) async {
     return await repository.loginWithPhone(params.phoneNumber);
   }
 }

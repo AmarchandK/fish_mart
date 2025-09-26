@@ -22,12 +22,12 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
   ) async {
     emit(const CategoryLoading());
 
-    final result = await getCategories(NoParams());
-
-    result.fold(
-      (failure) => emit(CategoryError(message: failure.message)),
-      (categories) => emit(CategoryLoaded(categories: categories)),
-    );
+    try {
+      final categories = await getCategories(NoParams());
+      emit(CategoryLoaded(categories: categories));
+    } catch (e) {
+      emit(CategoryError(message: e.toString()));
+    }
   }
 
   Future<void> _onCategoryRefreshRequested(

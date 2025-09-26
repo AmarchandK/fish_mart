@@ -30,38 +30,37 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       emit(const ProductLoading());
     }
 
-    final result = await getProducts(
-      GetProductsParams(
-        page: event.page,
-        limit: event.limit,
-        categoryId: event.categoryId,
-        searchQuery: event.searchQuery,
-      ),
-    );
+    try {
+      final products = await getProducts(
+        GetProductsParams(
+          page: event.page,
+          limit: event.limit,
+          categoryId: event.categoryId,
+          searchQuery: event.searchQuery,
+        ),
+      );
 
-    result.fold(
-      (failure) => emit(ProductError(message: failure.message)),
-      (products) {
-        if (state is ProductLoaded) {
-          final currentState = state as ProductLoaded;
-          final allProducts = event.page == 1 
-              ? products 
-              : [...currentState.products, ...products];
-          
-          emit(ProductLoaded(
-            products: allProducts,
-            hasReachedMax: products.length < event.limit,
-            currentPage: event.page,
-          ));
-        } else {
-          emit(ProductLoaded(
-            products: products,
-            hasReachedMax: products.length < event.limit,
-            currentPage: event.page,
-          ));
-        }
-      },
-    );
+      if (state is ProductLoaded) {
+        final currentState = state as ProductLoaded;
+        final allProducts = event.page == 1
+            ? products
+            : [...currentState.products, ...products];
+
+        emit(ProductLoaded(
+          products: allProducts,
+          hasReachedMax: products.length < event.limit,
+          currentPage: event.page,
+        ));
+      } else {
+        emit(ProductLoaded(
+          products: products,
+          hasReachedMax: products.length < event.limit,
+          currentPage: event.page,
+        ));
+      }
+    } catch (e) {
+      emit(ProductError(message: e.toString()));
+    }
   }
 
   Future<void> _onProductFeaturedLoadRequested(
@@ -70,12 +69,12 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ) async {
     emit(const ProductLoading());
 
-    final result = await getFeaturedProducts(NoParams());
-
-    result.fold(
-      (failure) => emit(ProductError(message: failure.message)),
-      (products) => emit(ProductFeaturedLoaded(featuredProducts: products)),
-    );
+    try {
+      final products = await getFeaturedProducts(NoParams());
+      emit(ProductFeaturedLoaded(featuredProducts: products));
+    } catch (e) {
+      emit(ProductError(message: e.toString()));
+    }
   }
 
   Future<void> _onProductRefreshRequested(
